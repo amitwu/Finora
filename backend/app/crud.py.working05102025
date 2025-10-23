@@ -1,0 +1,143 @@
+# backend/app/crud.py
+import re
+from datetime import date
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+from typing import Optional, List
+from app import models, schemas
+
+
+# ---------- Safe arithmetic evaluator ----------
+def _safe_eval(expr):
+    """Evaluate arithmetic expressions safely (e.g. '100+200-50')."""
+    if isinstance(expr, (int, float)):
+        return float(expr)
+    if not isinstance(expr, str):
+        raise ValueError("Invalid value type")
+
+    if not re.fullmatch(r"[0-9+\-*/. ()]+", expr):
+        raise ValueError(f"Unsafe expression: {expr}")
+
+    try:
+        return float(eval(expr, {"__builtins__": None}, {}))
+    except Exception:
+        raise ValueError(f"Invalid arithmetic expression: {expr}")
+
+
+# ---------- CATEGORY CRUD ----------
+def get_categories(db: Session) -> List[models.Category]:
+    return db.query(models.Category).all()
+
+
+def get_category_by_id(db: Session, category_id: int) -> Optional[models.Category]:
+    return db.query(models.Category).filter(models.Category.id == category_id).first()
+
+
+def create_category(db: Session, category_in: schemas.CategoryCreate) -> models.Category:
+    category = models.Category(
+        name=category_in.name,
+        type=category_in.type,
+        parent_id=category_in.parent_id
+    )
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+def update_category(db: Session, category_id: int, category_in: schemas.CategoryUpdate) -> Optional[models.Category]:
+    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if not category:
+        return None
+    if category_in.name is not None:
+        category.name = category_in.name
+    if category_in.type is not None:
+        category.type = category_in.type
+    if category_in.parent_id is not None:
+        category.parent_id = category_in.parent_id
+    db.commit()
+    db.refresh(category)
+    return category
+
+
+def delete_category(db: Session, category_id: int) -> bool:
+    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if not category:
+        return False
+    db.delete(category)
+    db.commit()
+    return True
+
+
+# ---------- BUDGET ITEM CRUD ----------
+def create_budget_item(db: Session, item_in: schemas.BudgetItemCreate) -> models.BudgetItem:
+    planned = _safe_eval(item_in.planned)
+    actual = _safe_eval(item_in.actual)
+    db_item = models.BudgetItem(
+        type=item_in.type,
+        category_id=item_in.category_id,
+        name=item_in.name,
+        planned=planned,
+        actual=actual,
+        date=item_in.date
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def get_budget_items_by_date_range(db: Session, start: date, end: date) -> List[models.BudgetItem]:
+    return (
+        db.query(models.BudgetItem)
+        .filter(and_(models.BudgetItem.date >= start, models.BudgetItem.date <= end))
+        .order_by(models.BudgetItem.date)
+        .all()
+    )
+
+
+def update_budget_item(db: Session, item_id: int, item_in: schemas.BudgetItemCreate) -> Optional[models.BudgetItem]:
+    item = db.query(models.BudgetItem).filter(models.BudgetItem.id == item_id).first()
+    if not item:
+        return None
+    item.type = item_in.type
+    item.category_id = item_in.category_id
+    item.name = item_in.name
+    item.planned = _safe_eval(item_in.planned)
+    item.actual = _safe_eval(item_in.actual)
+    item.date = item_in.date
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def patch_budget_item(db: Session, item_id: int, item_in: schemas.BudgetItemUpdate) -> Optional[models.BudgetItem]:
+    item = db.query(models.BudgetItem).filter(models.BudgetItem.id == item_id).first()
+    if not item:
+        return None
+
+    if item_in.type is not None:
+        item.type = item_in.type
+    if item_in.category_id is not None:
+        item.category_id = item_in.category_id
+    if item_in.name is not None:
+        item.name = item_in.name
+    if item_in.planned is not None:
+        item.planned = _safe_eval(item_in.planned)
+    if item_in.actual is not None:
+        item.actual = _safe_eval(item_in.actual)
+    if item_in.date is not None:
+        item.date = item_in.date
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def delete_budget_item(db: Session, item_id: int) -> bool:
+    item = db.query(models.BudgetItem).filter(models.BudgetItem.id == item_id).first()
+    if not item:
+        return False
+    db.delete(item)
+    db.commit()
+    return True

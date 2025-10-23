@@ -1,0 +1,81 @@
+#version: '3.8'
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: budget_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d budget_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # This service has been renamed to 'budget-app' to match the nginx.conf file.
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: budget-app-backend-cursorai
+    #command: uvicorn app.main:app --host 0.0.0.0 --port 5000
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/usr/src/app
+    environment:
+      DATABASE_URL: "postgresql://user:password@db:5432/budget_db"
+    depends_on:
+      - db
+    networks:
+      - app_network  
+  frontend:
+    build: ./frontend
+    restart: always
+    container_name: frontend-cursorai
+#    ports:
+#      - "3000:3000" # Exposes port 3000 from the container to your host machine
+    depends_on:
+      - backend
+    networks:
+      - app_network
+  nginx:
+    image: nginx:1.21-alpine
+    container_name: budget-app-gemini-cursorai-nginx-1
+
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app_network
+
+
+# You can uncomment this service and run 'docker-compose up certs' if you need to regenerate the SSL certificates.
+# certs:
+#   image: alpine:latest
+#   container_name: cert_generator
+#   volumes:
+#     - ./nginx/certs:/certs
+#   command: sh -c "apk add --no-cache openssl && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /certs/localhost.key -out /certs/localhost.crt -subj '/CN=localhost'"
+
+
+volumes:
+  pgdata:
+
+networks:
+  app_network:

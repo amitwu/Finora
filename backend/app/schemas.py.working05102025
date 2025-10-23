@@ -1,0 +1,50 @@
+from pydantic import BaseModel
+from typing import Optional, Union
+from datetime import date
+
+# ---- Category Schemas ----
+class CategoryBase(BaseModel):
+    name: str
+    type: str                  # "income" or "expense"
+    parent_id: Optional[int] = None
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str]
+    type: Optional[str]         # "income" or "expense"
+    parent_id: Optional[int]
+
+class Category(CategoryBase):
+    id: int
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+
+# ---- Budget Item Schemas ----
+class BudgetItemBase(BaseModel):
+    type: str
+    category_id: Optional[int]
+    name: str
+    planned: Union[str, float]
+    actual: Union[str, float]
+    date: date
+
+class BudgetItemCreate(BudgetItemBase):
+    pass
+
+class BudgetItemUpdate(BaseModel):
+    type: Optional[str]
+    category_id: Optional[int]
+    name: Optional[str]
+    planned: Optional[Union[str, float]]
+    actual: Optional[Union[str, float]]
+    date: Optional[date]
+
+class BudgetItem(BudgetItemBase):
+    id: int
+    class Config:
+        orm_mode = True
+        from_attributes = True

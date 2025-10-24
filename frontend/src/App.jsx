@@ -4,7 +4,7 @@ import React from 'react';
 import { Routes, Route, useLocation, Link } from 'react-router-dom'; // ייבא גם Link ו-useLocation עבור ה-Sidebar
 import Layout from './Layout.jsx'; // וודא שהנתיב ל-Layout.jsx נכון
 import DashboardPage from './pages/DashboardPage'; // וודא שהנתיב נכון
-import BudgetEntryPage from './pages/BudgetEntryPage_jsxNOTGOOD.TXT/index.js'; // וודא שהנתיב נכון
+//import BudgetEntryPage from './pages/BudgetEntryPage_jsxNOTGOOD.TXT/index.js'; // וודא שהנתיב נכון
 import './index.css'; 
 import CategoriesPage from './pages/CategoriesPage'; // Add this import near the top
 import ReportsPage from './pages/ReportsPage';

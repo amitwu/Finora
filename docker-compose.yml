@@ -24,7 +24,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: budget-app-backend-cursorai
+    container_name: finora-backend
     #command: uvicorn app.main:app --host 0.0.0.0 --port 5000
     restart: always
     ports:
@@ -40,7 +40,7 @@ services:
   frontend:
     build: ./frontend
     restart: always
-    container_name: frontend-cursorai
+    container_name: finora-frontend
 #    ports:
 #      - "3000:3000" # Exposes port 3000 from the container to your host machine
     depends_on:
@@ -49,7 +49,7 @@ services:
       - app_network
   nginx:
     image: nginx:1.21-alpine
-    container_name: budget-app-gemini-cursorai-nginx-1
+    container_name: finora-nginx
 
     restart: always
     ports:

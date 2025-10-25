@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/budget-app-gemini.iml" filepath="$PROJECT_DIR$/.idea/budget-app-gemini.iml" />
+      <!-- <module fileurl="file://$PROJECT_DIR$/.idea/budget-app-gemini.iml" filepath="$PROJECT_DIR$/.idea/budget-app-gemini.iml" /> -->
+      <module fileurl="file://$PROJECT_DIR$/.idea/Finora.iml" filepath="$PROJECT_DIR$/.idea/Finora.iml" />
     </modules>
   </component>
 </project>

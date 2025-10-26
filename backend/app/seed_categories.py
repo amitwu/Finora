@@ -1,15 +1,19 @@
 from app.database import SessionLocal
 from app.models import CategoryDB
 
-INCOME_CATEGORIES = [
-    "משכורת 1",
-    "משכורת 2",
-    "הכנסה נוספת",
-    "קצבה ביטוח לאומי",
-    "הכנסה משכירות",
-    "תמיכה",
-    "בונוסים מתנות",
-]
+# Parent -> list of subcategories
+INCOME_CATEGORIES = {
+    "מקורות הכנסה": [
+        "משכורת  ראשונה",
+        "משכורת  שניה",
+        "הכנסה נוספת",
+        "קצבה ביטוח לאומי",
+        "הכנסה משכירות",
+        "תמיכה",
+        "בונוסים מתנות",
+        "שונות",
+    ],
+}
 
 EXPENSE_CATEGORIES = {
     "בית שוטף": ["השכרת דירה / משכנתא", "ביטוח משכנתא", "ועד בית", "אחזקת בית", "ביטוחים חיים", "ביטוחים בריאות"],
@@ -18,7 +22,7 @@ EXPENSE_CATEGORIES = {
     "רכב": ["תיקוני רכב", "ביטוח רכב", "טסט", "הוצאות דלק", "חניה", "כביש 6"],
     "פנאי ובילויים": ["חדר כושר / מנוי", "אירועים ומתנות", "תרומות", "מסעדות ובתי קפה", "סיגריות / אלכוהול"],
     "בנק": ["הלוואות", "עמלות וריביות"],
-    "שונות": ["רפואה פרטית", "חופשה / טיול", "יהדות וחגים", "תשלומי עירייה", "דמי כרטיס אשראי", "מזומן", "בלתי צפויות"],
+    "שונות": ["רפואה פרטית", "חופשה / טיול", "יהדות וחגים", "תשלומי עיריה", "דמי כרטיס אשראי", "מזומן", "בלתי צפויות"],
 }
 
 def seed_categories():
@@ -27,10 +31,14 @@ def seed_categories():
         print("🔄 Clearing existing categories...")
         db.query(CategoryDB).delete()
 
-        # --- Income ---
-        print("📥 Seeding income categories...")
-        for name in INCOME_CATEGORIES:
-            db.add(CategoryDB(name=name, type="income", parent_id=None))
+        # --- Income: create parent + subcategories ---
+        print("📥 Seeding income categories (parent + subcategories)...")
+        for parent_name, subcats in INCOME_CATEGORIES.items():
+            parent = CategoryDB(name=parent_name, type="income", parent_id=None)
+            db.add(parent)
+            db.flush()  # get parent.id
+            for sub in subcats:
+                db.add(CategoryDB(name=sub, type="income", parent_id=parent.id))
 
         # --- Expenses ---
         print("📥 Seeding expense categories & subcategories...")
